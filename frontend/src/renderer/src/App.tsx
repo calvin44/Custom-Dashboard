@@ -11,27 +11,29 @@ interface AppProps {
 const App: React.FC<AppProps> = () => {
   const [brandName, setBrandName] = useState<string>('')
   const [tableData, setTableData] = useState<TableData>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (brandName) setLoading(false)
-  }, [brandName])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
         const apiResponse = await api.getDataTable()
 
-        // Only update if data actually changed
-        if (
-          apiResponse.BrandName !== brandName ||
-          JSON.stringify(apiResponse.TableData) !== JSON.stringify(tableData)
-        ) {
-          setBrandName(apiResponse.BrandName)
-          setTableData(apiResponse.TableData)
-        }
+        const newBrandName = apiResponse.BrandName || ''
+        const newTableData = apiResponse.TableData || []
+
+        const brandChanged = newBrandName !== brandName
+        const tableChanged = JSON.stringify(newTableData) !== JSON.stringify(tableData)
+
+        if (!brandChanged && !tableChanged) return // early return if nothing changed
+
+        setLoading(true)
+
+        if (brandChanged) setBrandName(newBrandName)
+        if (tableChanged) setTableData(newTableData)
       } catch (error) {
         console.error('Failed to fetch data table:', error)
+      } finally {
+        setLoading(false)
       }
     }, 5000)
 
@@ -76,7 +78,7 @@ const App: React.FC<AppProps> = () => {
             />
           ) : (
             <Typography variant="h2" textAlign="center">
-              {brandName}
+              {brandName ? brandName : 'No Data'}
             </Typography>
           )}
           <Divider sx={{ width: '100%' }} />
