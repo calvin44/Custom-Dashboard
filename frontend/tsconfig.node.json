@@ -1,0 +1,21 @@
+{
+  "include": [
+    "electron.vite.config.*",
+    "src/main/**/*",
+    "src/preload/**/*"
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "composite": true,
+    "types": [
+      "electron-vite/node"
+    ],
+    "paths": {
+      "@types/*": [
+        "src/types/*"
+      ]
+    }
+  }
+}

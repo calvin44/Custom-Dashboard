@@ -1,0 +1,25 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@preload/*": [
+        "src/preload/*"
+      ],
+      "@renderer/*": [
+        "src/renderer/src/*"
+      ],
+      "@types/*": [
+        "src/types/*"
+      ]
+    }
+  },
+  "include": [
+    "src/renderer/src/**/*",
+    "src/preload/**/*"
+  ]
+}
