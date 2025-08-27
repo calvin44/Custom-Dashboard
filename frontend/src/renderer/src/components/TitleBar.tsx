@@ -7,7 +7,11 @@ import RemoveIcon from '@mui/icons-material/Remove'
 import CropSquareIcon from '@mui/icons-material/CropSquare'
 import CloseIcon from '@mui/icons-material/Close'
 
-export const TitleBar: React.FC = () => {
+interface TitleBarProps {
+  feature: Feature
+}
+
+export const TitleBar: React.FC<TitleBarProps> = ({ feature }) => {
   const { ipcRenderer } = window.electron
 
   return (
@@ -19,20 +23,28 @@ export const TitleBar: React.FC = () => {
       }}
     >
       <Toolbar
-        variant="dense"
         sx={{
+          position: 'relative', // needed for absolute children
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
           padding: '0 !important',
-          minHeight: '30px !important',
-          margin: 0
+          minHeight: '30px !important'
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{ flexGrow: 1, userSelect: 'none', lineHeight: '30px', py: 1, px: 2 }}
-        >
+        {/* Left: App title */}
+        <Typography variant="h6" sx={typographySx}>
           My Dashboard
         </Typography>
 
+        {/* Center: Feature */}
+        <Box>
+          <Typography variant="h6" sx={typographySx}>
+            {feature}
+          </Typography>
+        </Box>
+
+        {/* Right: Window buttons */}
         <Box sx={{ display: 'flex' }}>
           <IconButton
             sx={buttonSx}
@@ -72,3 +84,5 @@ const buttonSx = {
   '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
   '&:active': { backgroundColor: 'rgba(255,255,255,0.4)' }
 }
+
+const typographySx = { userSelect: 'none', lineHeight: '30px', py: 1, px: 2 }

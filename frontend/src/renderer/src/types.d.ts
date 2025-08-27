@@ -8,7 +8,19 @@ interface DataRow {
   Weight: number
 }
 
-interface ApiResponse {
+interface DataTable {
   BrandName: string
   TableData: TableData
 }
+
+interface ConfigRow {
+  BrandName: string
+  Median: string
+  Mean: string
+  STD: string
+  Min: number
+  Max: number
+}
+
+type Feature = 'Dashboard' | 'Config'
+type ConfigTable = ConfigRow[]

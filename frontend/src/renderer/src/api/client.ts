@@ -18,5 +18,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getDataTable: () => request<ApiResponse>('/get-data-table')
+  getDataTable: () => request<DataTable>('/get-data-table'),
+  getConfig: () => request<ConfigTable>('/get-config'),
+  updateConfig: (data: ConfigTable) =>
+    request<void>('/overwrite-config', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
 }

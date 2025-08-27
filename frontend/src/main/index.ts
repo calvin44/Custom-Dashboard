@@ -150,8 +150,8 @@ app.whenReady().then(async () => {
   })
   ipcMain.on('window-close', (event) => BrowserWindow.fromWebContents(event.sender)?.close())
 
-  // Start backend first, then show frontend window
-  await startBackend()
+  // Start backend first, then show frontend window comment on dev mode
+  // await startBackend()
   createWindow()
 
   // On macOS, re-create a window if none are open

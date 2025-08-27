@@ -43,6 +43,7 @@ class ConfigRow(BaseModel):
         Min (float): The minimum value.
         Max (float): The maximum value.
     """
+    BrandName: str
     Median: str
     Mean: str
     STD: str
