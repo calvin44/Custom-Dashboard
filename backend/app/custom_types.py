@@ -1,7 +1,8 @@
-from typing import List, TypedDict
+from typing import List
+from pydantic import BaseModel
 
 
-class DataRow(TypedDict):
+class DataRow(BaseModel):
     """
     Represents a single row of measurement data in a table.
 
@@ -19,7 +20,7 @@ class DataRow(TypedDict):
     Weight: str
 
 
-class DataTable(TypedDict):
+class DataTable(BaseModel):
     """
     Represents a complete data table with a brand name and multiple data rows.
 
@@ -29,3 +30,21 @@ class DataTable(TypedDict):
     """
     BrandName: str
     TableData: List[DataRow]
+
+
+class ConfigRow(BaseModel):
+    """
+    Represents a single row of configuration data.
+
+    Attributes:
+        Median (str): The median value.
+        Mean (str): The mean value.
+        STD (str): The standard deviation.
+        Min (float): The minimum value.
+        Max (float): The maximum value.
+    """
+    Median: str
+    Mean: str
+    STD: str
+    Min: float
+    Max: float

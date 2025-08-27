@@ -1,6 +1,6 @@
 from typing import List
 from loguru import logger
-from app.file_ops import read_json, write_json
+from app.file_ops import read_data_table, write_data_table
 from app.custom_types import DataRow, DataTable
 
 
@@ -18,13 +18,13 @@ def upsert_data_table(new_data: DataTable) -> None:
         new_data (DataTable): The new data to insert or update.
     """
     # Read current JSON
-    current_data = read_json()
+    current_data = read_data_table()
 
     # Check if brand name exists and matches
     if not current_data or current_data.get("BrandName") != new_data["BrandName"]:
         # Overwrite entirely
         logger.info(f"Overwriting data for brand: {new_data['BrandName']}")
-        write_json(new_data)
+        write_data_table(new_data)
         return
 
     logger.info(f"Merging data for brand: {new_data['BrandName']}")
@@ -46,4 +46,4 @@ def upsert_data_table(new_data: DataTable) -> None:
         "BrandName": new_data["BrandName"],
         "TableData": merged_rows
     }
-    write_json(updated_data)
+    write_data_table(updated_data)

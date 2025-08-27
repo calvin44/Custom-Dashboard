@@ -1,30 +1,51 @@
 import json
 from threading import Lock
-from typing import Dict, Union
-
-from app.custom_types import DataTable
-from app.utils import get_runtime_file_info
+from app.custom_types import ConfigRow, DataTable
+from app.utils import config_rows_to_dicts, get_runtime_file_info
 
 lock = Lock()  # Prevent concurrent writes
 
 
-def read_json() -> Union[DataTable, Dict]:
+def read_data_table() -> DataTable:
     """
-    Read JSON file and return its dictionary content.
+    Read DataTable and return Object
     """
     try:
-        _, file_path = get_runtime_file_info()
-        with open(file_path, "r", encoding="utf-8") as f:
+        runtime_info = get_runtime_file_info()
+        with open(runtime_info.datatable_json, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         return {}
 
 
-def write_json(data: dict):
+def read_config() -> list[ConfigRow]:
+    """
+    Read config file and return list of ConfigRow
+    """
+    try:
+        runtime_info = get_runtime_file_info()
+        with open(runtime_info.config_json, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+
+def write_data_table(data: DataTable):
     """
     Write a dictionary to a JSON file.
     """
     with lock:
-        _, file_path = get_runtime_file_info()
-        with open(file_path, "w", encoding="utf-8") as f:
+        runtime_info = get_runtime_file_info()
+        with open(runtime_info.datatable_json, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def write_config(data: list[ConfigRow]):
+    """
+    Write a dictionary to a JSON file.
+    """
+    with lock:
+        runtime_info = get_runtime_file_info()
+        with open(runtime_info.config_json, "w", encoding="utf-8") as f:
+            json.dump(config_rows_to_dicts(data),
+                      f, indent=2, ensure_ascii=False)
