@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Button,
@@ -20,6 +20,7 @@ import { Add, Delete, Save } from '@mui/icons-material'
 import { api } from '@renderer/api/client'
 import { useSnackbar } from '@renderer/customhooks'
 import { Alert } from './Alert'
+import { isInvalidCell } from '@renderer/utils'
 
 export const Config: React.FC = () => {
   const [configData, setConfigData] = useState<ConfigTable>([])
@@ -27,7 +28,13 @@ export const Config: React.FC = () => {
   const [updating, setUpdating] = useState(false)
   const [problematicRows, setProblematicRows] = useState<number[]>([])
 
-  const errorMessage = `Rows ${problematicRows.map((i) => i + 1).join(', ')} contain invalid values. Please review.`
+  const [savedConfig, setSavedConfig] = useState<ConfigTable>([])
+  const hasUpdate = useMemo(() => {
+    return JSON.stringify(savedConfig) !== JSON.stringify(configData)
+  }, [savedConfig, configData])
+
+  const errorMessage = `Unable to save due to rows ${problematicRows.map((i) => i + 1).join(', ')} contain invalid values. BrandName is required.`
+
   const { showSnackbar, ...snackbarProps } = useSnackbar()
 
   useEffect(() => {
@@ -44,6 +51,7 @@ export const Config: React.FC = () => {
     try {
       const apiResponse = await api.getConfig()
       setConfigData(apiResponse)
+      setSavedConfig(apiResponse)
     } catch (err) {
       console.error('Failed to fetch config', err)
     }
@@ -83,6 +91,11 @@ export const Config: React.FC = () => {
     setChangesAvailable(true)
   }
 
+  const canUpdate = useMemo(
+    () => changesAvailable && hasUpdate && problematicRows.length === 0,
+    [changesAvailable, hasUpdate, problematicRows]
+  )
+
   useEffect(() => {
     fetchConfig()
   }, [])
@@ -91,9 +104,9 @@ export const Config: React.FC = () => {
     <Box padding={2} display="flex" flexDirection="column" gap={2} flexGrow={1} overflow="auto">
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h4">Configuration</Typography>
-        <Badge color="secondary" badgeContent="!" overlap="circular" invisible={!changesAvailable}>
+        <Badge color="secondary" badgeContent="!" overlap="circular" invisible={!canUpdate}>
           <Button
-            disabled={!changesAvailable}
+            disabled={!canUpdate}
             startIcon={updating ? <CircularProgress size={24} /> : <Save />}
             variant="contained"
             color="primary"
@@ -141,7 +154,13 @@ export const Config: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      <Button sx={{ width: 300 }} variant="contained" startIcon={<Add />} onClick={handleAddRow}>
+      <Button
+        disabled={problematicRows.length > 0}
+        sx={{ width: 300 }}
+        variant="contained"
+        startIcon={<Add />}
+        onClick={handleAddRow}
+      >
         Add Row
       </Button>
       <Alert autoHideDuration={2000} {...snackbarProps} />
@@ -164,8 +183,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
   value,
   setChangesAvailable
 }) => {
+  const theme = useTheme()
   const [editing, setEditing] = useState(false)
   const [localValue, setLocalValue] = useState(value ?? '')
+  const isInvalid = useCallback(() => isInvalidCell(field, localValue), [field, localValue])
 
   // Sync localValue whenever the parent value changes
   useEffect(() => {
@@ -188,7 +209,11 @@ const EditableCell: React.FC<EditableCellProps> = ({
   return (
     <TableCell
       onClick={() => !editing && setEditing(true)}
-      sx={{ cursor: 'pointer', textAlign: 'center' }}
+      sx={{
+        cursor: 'pointer',
+        textAlign: 'center',
+        ...(isInvalid() && { border: `2px solid ${theme.palette.error.main}` })
+      }}
     >
       {editing ? (
         <TextField
@@ -199,8 +224,22 @@ const EditableCell: React.FC<EditableCellProps> = ({
           variant="outlined"
           onChange={(e) => setLocalValue(e.target.value)}
           onBlur={handleBlur}
+          onFocus={(e) => e.target.select()}
           onKeyDown={(e) => {
             if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                border: 'none' // remove normal border
+              },
+              '&:hover fieldset': {
+                border: 'none' // remove hover border
+              },
+              '&.Mui-focused fieldset': {
+                border: 'none' // remove focus border
+              }
+            }
           }}
         />
       ) : (

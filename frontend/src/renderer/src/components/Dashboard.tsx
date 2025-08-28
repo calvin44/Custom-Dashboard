@@ -1,5 +1,5 @@
 import { Box, Divider, Skeleton, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { TopData } from './TopData'
 import { DataTable } from './DataTable'
 import { api } from '@renderer/api/client'
@@ -9,34 +9,47 @@ interface DashboardProps {}
 export const Dashboard: React.FC<DashboardProps> = () => {
   const [brandName, setBrandName] = useState<string>('')
   const [tableData, setTableData] = useState<TableData>([])
+  const [configData, setConfigData] = useState<ConfigTable>([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const apiResponse = await api.getDataTable()
+  const brandConfig = useMemo(
+    () => configData.find((item) => item.BrandName === brandName),
+    [configData, brandName]
+  )
 
-        const newBrandName = apiResponse.BrandName || ''
-        const newTableData = apiResponse.TableData || []
+  useEffect(() => {
+    const fetchData = async (): Promise<void> => {
+      try {
+        const getTableDataResponse = await api.getDataTable()
+        const getConfigResponse = await api.getConfig()
+
+        const newBrandName = getTableDataResponse.BrandName || ''
+        const newTableData = getTableDataResponse.TableData || []
 
         const brandChanged = newBrandName !== brandName
         const tableChanged = JSON.stringify(newTableData) !== JSON.stringify(tableData)
-
-        if (!brandChanged && !tableChanged) return // early return if nothing changed
+        const configDataChanged = JSON.stringify(getConfigResponse) !== JSON.stringify(configData)
 
         setLoading(true)
 
         if (brandChanged) setBrandName(newBrandName)
         if (tableChanged) setTableData(newTableData)
+        if (configDataChanged) setConfigData(getConfigResponse)
       } catch (error) {
         console.error('Failed to fetch data table:', error)
       } finally {
         setLoading(false)
       }
-    }, 5000)
+    }
+
+    // Initial fetch
+    fetchData()
+
+    // Polling every 5s
+    const interval = setInterval(fetchData, 5000)
 
     return () => clearInterval(interval)
-  }, [brandName, tableData])
+  }, [brandName, configData, tableData])
 
   return (
     <Box
@@ -66,10 +79,10 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         <Divider sx={{ width: '100%' }} />
 
         {/* Top data part for constants */}
-        <TopData />
+        <TopData configRow={brandConfig} />
 
         {/* Data table part for displaying data */}
-        <DataTable tableData={tableData} />
+        <DataTable tableData={tableData} configData={brandConfig} />
       </Box>
     </Box>
   )
